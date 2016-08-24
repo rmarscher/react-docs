@@ -12,13 +12,17 @@ Typically, `fetchMore` is used to manually update the result of one query based 
 This is possible with `fetchMore`. The `fetchMore` method allows us to fetch another query and incorporate that query's result into the result that our component query previously received. We can see it in action within the GitHunt code:
 
 ```javascript
+const FEED_QUERY = gql`
+  query Feed($type: FeedType!, $offset: Int, $limit: Int) {
+    // ...
+  }`;
 const FeedWithData = graphql(FEED_QUERY, {
-  props({ data: { loading, feed, currentUser, fetchMore, variables } }) {
+  props({ data: { loading, feed, currentUser, fetchMore } }) {
     return {
       loading,
       feed,
       currentUser,
-      fetchMore() {
+      loadNextPage() {
         return fetchMore({
           variables: {
             offset: feed.length,
@@ -36,7 +40,7 @@ const FeedWithData = graphql(FEED_QUERY, {
 })(Feed);
 ```
 
-We have two components here: `FeedWithData` and `Feed`. The `FeedWithData` implementation produces the `props` to be passed to the `Feed` component which serves as the presentation layer, i.e. it produces the UI. Specifically, we're mapping the `fetchMore` prop to the following:
+We have two components here: `FeedWithData` and `Feed`. The `FeedWithData` implementation produces the `props` to be passed to the `Feed` component which serves as the presentation layer, i.e. it produces the UI. Specifically, we're mapping the `loadNextPage` prop to the following:
 
 ```
 return fetchMore({
