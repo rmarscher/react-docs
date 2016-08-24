@@ -3,7 +3,7 @@ title: Updating your UI
 order: 7
 ---
 
-Assigning object identifiers to your result objects using `dataIdFromObject` allows Apollo Client to reactively tell your queries about update your queries with results when new information becomes available. But, in some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates. In particular, if you want to add something to a list of objects or if there are some objects that you can't assign an object identifier to, you should use either `fetchMore` or `updateQueries` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
+Within Apollo Client, we can specify a function through the `dataIdFromObject` option in order to give object identifiers to objects that our queries return. These allow Apollo Client to figure out when two different results actually point to exactly the same object. These object identifiers also allow Apollo Client to reactively tell your queries about update your queries with results when new information becomes available. But, in some cases, just using `dataIdFromObject` is not enough for your application UI to get these updates. In particular, if you want to add something to a list of objects or if there are some objects that you can't assign an object identifier to, you should use either `fetchMore` or `updateQueries` in order to make sure that the queries on your page are updated with the right information and your UI updates correctly.
 
 ## `fetchMore`
 
