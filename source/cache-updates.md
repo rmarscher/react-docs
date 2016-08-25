@@ -9,11 +9,11 @@ In order to incorporate the result of a query into the result of another query
 
 ## `updateQueries`
 
-Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize, most of the time, your UI should just update automatically based on the result of mutation as long as fields of the objects modified and the modified objects' identifiers are returned with the mutation (see the cache and `dataIdFromObject` documentation for more information).
+Just as `fetchMore` allows you to update your UI according to the result of a query, `updateQueries` lets you update your UI based on the result of a mutation. To re-emphasize: most of the time, your UI should just update automatically based on the result of a mutation as long as modified fields of objects and the object identifiers of modified objects are returned with the mutation (see the cache and `dataIdFromObject` documentation for more information).
 
-However, if you are removing or adding stuff to the list with a mutation, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
+However, if you are removing or adding stuff to a list with a mutation or can't assign object identifiers to some of your objects, you'll have to use `updateQueries` to make sure that your UI reflects the change correctly.
 
-As our example, we'll take the comments page within the GitHunt example. When we submit a new comment, the "submit" button fires a mutation which adds a new comment to the "list" of the comments held on the server. We expose this mutation through a function prop that the `CommentsPage` component can call. This is what the code looks like:
+We'll take the comments page within GitHunt as our example. When we submit a new comment, the "submit" button fires a mutation which adds a new comment to the "list" of the comments held on the server. We expose this mutation through a function prop that the `CommentsPage` component can call. This is what the code looks like:
 
 ```javascript
 const SUBMIT_COMMENT_MUTATION = gql`
@@ -99,7 +99,7 @@ const COMMENT_QUERY = gql`
         stargazers_count
       }
     }
-  }
+  }`;
 ```
 
 Now, we have to incorporate the newly added comment returned by the mutation into the information that was already returned by the `COMMENT_QUERY` that was fired when the page was loaded. We accomplish this through `updateQueries`. Zooming in on that portion of the code:
