@@ -37,7 +37,7 @@ We can expect the `data.currentUser` sub-prop to change as the logged-in-ness of
 
 <h3 id="graphql-options">Providing `options`</h3>
 
-If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed to [`ApolloClient.watchQuery`](apollo-client-api.html#watchQuery). In particular, if your query takes variables, this is the place to pass them in:
+If you want to configure the query, you can provide an `options` key on the second argument to `graphql`, and your options will be passed to [`ApolloClient.watchQuery`](apollo-client-api.html#watchQuery). If your query takes variables, this is the place to pass them in:
 
 ```js
 // Suppose our profile query took an avatar size
@@ -70,13 +70,14 @@ const ProfileWithData = withProfileData(Profile);
 
 By default, `graphql` will attempt to pick up any missing variables from the query from `ownProps`. So in our example above, we could have used the simpler `withProfileData = graphql(PROFILE_QUERY);`. However, if you need to change the name of a variable, or compute the value, the `options` function is the place to do it.
 
-<h3 id="other-graphql-options">Other `options`</h3>
+<h3 id="other-graphql-options">Other `watchQuery` `options`</h3>
 
-Also, you may want to configure the [watchQuery](apollo-client-api.html#watchQuery) behaviour using `options`:
+Also, you may want to configure the arguments used by Apollo's [watchQuery](apollo-client-api.html#watchQuery) using `options`:
 
 ```js
 const withPollingQuery = graphql(PROFILE_QUERY, {
-  options: () => ({ pollInterval: 1000 })
+  // See the watchQuery API for the options you can provide here
+  options: { pollInterval: 20000 },
 });
 ```
 
