@@ -4,16 +4,16 @@ order: 16
 ---
 
 
-Apollo provides two techniques to allow your applications to start quickly, avoiding unnecessary delays to users:
+Apollo provides two techniques to allow your applications to load quickly, avoiding unnecessary delays to users:
 
- - Store hydration, which allows your initial set of queries to execute immediately without a server roundtrip.
- - Server side rendering, which allows you to serve the initial HTML the user sees directly.
+ - Store rehydration, which allows your initial set of queries to return data immediately without a server roundtrip.
+ - Server side rendering, which renders the initial HTML view on the server before sending it to the client.
 
 You can use one or both of these techniques to provide a better user experience.
 
 <h2 id="store-rehydration">Store rehydration</h2>
 
-For applications that can perform some queries on the server prior to rendering the client, Apollo allows for setting the initial state of data. This is sometimes called rehydration (the data is "dehydrated" when it is serialized and included in the initial HTML payload).
+For applications that can perform some queries on the server prior to rendering the UI on the client, Apollo allows for setting the initial state of data. This is sometimes called rehydration (the data is "dehydrated" when it is serialized and included in the initial HTML payload).
 
 For example, a typical approach is to include a script tag that looks something like:
 
@@ -25,8 +25,6 @@ For example, a typical approach is to include a script tag that looks something 
 </script>
 ```
 
-> We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, it might make sense to generate the state in some other way.
-
 You can then rehydrate the client using the initial state passed from the server:
 ```js
 const client = new ApolloClient({
@@ -34,9 +32,11 @@ const client = new ApolloClient({
 });
 ```
 
-> Note: if you are using [redux externally](redux.html) to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
+> We'll see below how you can generate both the HTML and the Apollo store's state using Node and `react-apollo`'s server rendering functions. However if you are rendering HTML via some other means, you will have to generate the state manually.
 
-Then, when a client calls runs queries, the data should be returned instantly because it is already in the store!
+> Note: if you are using [Redux](redux.html) externally to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
+
+Then, when a client calls runs queries, the data will be returned instantly because it is already in the store!
 
 > Note that if you are using [`forceFetch`](cache-updates.html#forceFetch) on queries, you should pass the `ssrForceFetchDelay` option to skip force fetching during initialization:
 
@@ -51,8 +51,6 @@ const client = new ApolloClient({
 
 You can render your entire React-based Apollo application on a Node server using some built in rendering functions. These functions take care of the job of fetching all queries that are required to rendering your component tree. Typically you would use these functions from within a HTTP server such as [Express](https://expressjs.com).
 
-> The GitHunt example app includes a SSR setup and uses the functions below from the `app-server` process.
-
 No changes are required to client queries to support this, however, queries can be ignored during server rendering by passing `ssr: false` in the query options. Typically, this will mean the component will get rendered in it's loading state on the server. For example:
 
 ```js
@@ -63,7 +61,17 @@ const withClientOnlyUser = graphql(GET_USER_WITH_ID, {
 
 <h3 id="server-initialization">Server Initialization</h3>
 
-When [creating an Apollo Client instance](initialization.html) on the server, you'll probably need to consider the network interface, and pass the `ssrMode: true` option to stop the server from force-fetching.
+In order to render your application on the server, you need to handle a HTTP request (using a server like Express, and a server-capable Router like React-Router), and then render your application to a string to pass back on the response.
+
+We'll see how to take your component tree and turn it into a string in the next section, but you'll need to be a little careful in how you construct your Apollo Client instance on the server to ensure everything works there as well:
+
+1. When [creating an Apollo Client instance](initialization.html) on the server, you'll need to set up you network interface to connect to the API server correctly (this will look different to how you do it on the client).
+
+2. As you just want to fetch query results once, pass the `ssrMode: true` option to the Apollo Client constructor to avoid force-fetching.
+
+3. You need to ensure that you create a new client for each request, rather than re-using the same client for multiple requests as otherwise you'll have problems with [authentication](authentication.html) and you may see stale results.
+
+Once you put that all together, you'll end up with initialization code that looks something like (you can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example):
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -84,7 +92,9 @@ app.use((req, res) => {
 
     const client = new ApolloClient({
       ssrMode: true,
-      networkInterface: createNetworkInterface(apiUrl, {
+      // Remember that this is the interface the SSR server will use to connect to the
+      // API server, so we need to ensure it isn't firewalled, etc
+      networkInterface: createNetworkInterface('http://localhost:3010', {
         credentials: 'same-origin',
         // transfer request headers to networkInterface so that they're accessible to proxy server
         // Addresses this issue: https://github.com/matthew-andrews/isomorphic-fetch/issues/83
@@ -105,16 +115,15 @@ app.use((req, res) => {
 app.listen(basePort, () => console.log( // eslint-disable-line no-console
   `App Server is now running on http://localhost:${basePort}`
 ));
-
 ```
 
-> You should create a new client for each request, rather than re-using the same client for multiple requests as otherwise you'll have problems with [authentication](authentication.html) and you may see stale results.
+Next we'll see what that rendering code actually does.
 
 <h3 id="getDataFromTree">Using `getDataFromTree`</h3>
 
-The `getDataFromTree` function takes your React tree, determines and runs all queries required, and returns the context required to do so. This can be used to get the initialState via `context.store.getState()`
+The `getDataFromTree` function takes your React tree, determines which queries are needed to render them, and then fetches them all (it does this recursively if you have nested queries). It returns a promise which returns the React Context provided by `ApolloProvider` (you can use this to get the current store state with `context.store.getState()`).
 
-At the point that the promise returns, your Apollo Client will be completely initialized, which should mean your app will render instantly and you can return the stringified results to the request:
+At the point that the promise returns, your Apollo Client will be completely initialized, which should mean your app will now render instantly (all queries are prefetched) and you can return the stringified results to the request:
 
 ```js
 import { getDataFromTree } from "react-apollo/server"
@@ -122,7 +131,7 @@ import { getDataFromTree } from "react-apollo/server"
 // during request (see above)
 getDataFromTree(app).then((context) => {
   // We are ready to render for real
-  const markup = ReactDOM.renderToString(app);
+  const content = ReactDOM.renderToString(app);
 
   const html = <Html content={content} state={context.store.getState()} />;
 
