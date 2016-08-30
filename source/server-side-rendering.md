@@ -36,7 +36,7 @@ const client = new ApolloClient({
 
 > Note: if you are using [Redux](redux.html) externally to Apollo, and already have store rehydration, you should pass the store state into the [`Store` constructor](http://redux.js.org/docs/basics/Store.html).
 
-Then, when a client calls runs queries, the data will be returned instantly because it is already in the store!
+Then, when the client runs the first set of queries, the data will be returned instantly because it is already in the store!
 
 > Note that if you are using [`forceFetch`](cache-updates.html#forceFetch) on queries, you should pass the `ssrForceFetchDelay` option to skip force fetching during initialization:
 
@@ -71,7 +71,7 @@ We'll see how to take your component tree and turn it into a string in the next 
 
 3. You need to ensure that you create a new client for each request, rather than re-using the same client for multiple requests as otherwise you'll have problems with [authentication](authentication.html) and you may see stale results.
 
-Once you put that all together, you'll end up with initialization code that looks something like (you can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example):
+Once you put that all together, you'll end up with initialization code that looks as follows:
 
 ```js
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
@@ -116,6 +116,8 @@ app.listen(basePort, () => console.log( // eslint-disable-line no-console
   `App Server is now running on http://localhost:${basePort}`
 ));
 ```
+You can check out the [GitHunt app's `ui/server.js`](https://github.com/apollostack/GitHunt-React/blob/master/ui/server.js) for a complete working example.
+
 
 Next we'll see what that rendering code actually does.
 
