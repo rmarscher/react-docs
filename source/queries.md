@@ -24,6 +24,7 @@ Profile.propTypes = {
   }).isRequired,
 };
 
+// We use the gql tag to parse our query string into a query document
 const CurrentUserForLayout = gql`
   query CurrentUserForLayout {
     currentUser {
