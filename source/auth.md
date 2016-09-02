@@ -1,11 +1,20 @@
 ---
+<<<<<<< HEAD
 title: Authentication
 order: 20
+=======
+title: Basic user authentication
+order: 10
+>>>>>>> 48713c33eab805020261930dbf1a8cb11ed044c4
 ---
 
 Some applications don't deal with sensitive data and have no need to authenticate users, but most applications have some sort of users, accounts and permissions systems. If different users have different permissions in your application, then you need a way to tell the server which user is associated with each request. Over HTTP, the most common way is to send along an authorization header.
 
+<<<<<<< HEAD
 Apollo Client has a pluggable network interface that lets you modify requests before they are sent to the server.
+=======
+Apollo Client has a pluggable network interface XXX link XXX that lets you modify requests before they are sent to the server.
+>>>>>>> 48713c33eab805020261930dbf1a8cb11ed044c4
 That makes it easy to add a network interface middleware that adds the `authorization` header to every HTTP request:
 
 ```js
@@ -19,7 +28,11 @@ networkInterface.use([{
       req.options.headers = {};  // Create the header object if needed.
     }
     // get the authentication token from local storage if it exists
+<<<<<<< HEAD
     req.options.headers.authorization = localStorage.getItem('token') ? localStorage.getItem('token') : null;
+=======
+    req.options.headers.authorization = localStorage.getItem('token') || null;
+>>>>>>> 48713c33eab805020261930dbf1a8cb11ed044c4
     next();
   }
 }]);
